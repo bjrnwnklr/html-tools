@@ -25,42 +25,46 @@ These tools follow a few key principles:
 ## Tools
 
 ### [Countdown Timer](countdown-timer.html)
+
 A clean, elegant countdown timer with:
-- Preset buttons for 1, 3, and 5 minutes
-- Custom time input (minutes and seconds)
-- Circular progress visualization
-- Dark mode optimized design
-- Optional sound notification
-- Background color change when time expires
+
+-   Preset buttons for 1, 3, and 5 minutes
+-   Custom time input (minutes and seconds)
+-   Circular progress visualization
+-   Dark mode optimized design
+-   Optional sound notification
+-   Background color change when time expires
 
 ## How to Use
 
-1. **Online**: Visit the [live version](https://YOUR_USERNAME.github.io/html-tools/) (once deployed)
+1. **Online**: Visit the [live version](https://bjrnwnklr.github.io/html-tools/)
 
-2. **Locally**: 
-   - Clone this repository
-   - Open any `.html` file in your browser
-   - That's it!
+2. **Locally**:
+
+    - Clone this repository
+    - Open any `.html` file in your browser
+    - That's it!
 
 3. **Customize**:
-   - These tools are designed to be easily modified
-   - Open the HTML file in any text editor
-   - All code is visible and hackable
-   - Use AI assistants like Claude or ChatGPT to help modify them
+    - These tools are designed to be easily modified
+    - Open the HTML file in any text editor
+    - All code is visible and hackable
+    - Use AI assistants like Claude or ChatGPT to help modify them
 
 ## Building Your Own Tools
 
 If you want to create similar tools, here are some patterns that work well:
 
-- **Persist state in the URL** - Use URL parameters to make tools shareable and bookmarkable
-- **Use localStorage** - Store user preferences or API keys locally
-- **Load from CDNs** - Use services like cdnjs or jsdelivr for any libraries you need
-- **Keep them small** - A few hundred lines of code is ideal for maintainability
-- **Avoid build steps** - Inline everything to keep it simple
+-   **Persist state in the URL** - Use URL parameters to make tools shareable and bookmarkable
+-   **Use localStorage** - Store user preferences or API keys locally
+-   **Load from CDNs** - Use services like cdnjs or jsdelivr for any libraries you need
+-   **Keep them small** - A few hundred lines of code is ideal for maintainability
+-   **Avoid build steps** - Inline everything to keep it simple
 
 ## Contributing
 
 Have a useful tool to add? Feel free to:
+
 1. Fork this repository
 2. Add your single-file HTML tool
 3. Update this README with a description
@@ -88,4 +92,4 @@ Huge thanks to [Simon Willison](https://simonwillison.net/) for pioneering this 
 
 ---
 
-*Built with the help of Claude, because why not use the tools available to us?*
+_Built with the help of Claude, because why not use the tools available to us?_
