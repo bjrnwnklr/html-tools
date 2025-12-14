@@ -72,7 +72,7 @@ Have a useful tool to add? Feel free to:
 
 ## License
 
-Copyright 2025 [Your Name]
+Copyright 2025 Bjoern Winkler
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
