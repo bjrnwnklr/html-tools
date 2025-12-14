@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>HTML Tools</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                    Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                color: #e4e4e4;
+                min-height: 100vh;
+                padding: 40px 20px;
+            }
+
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+                font-weight: 300;
+                letter-spacing: 2px;
+                margin-bottom: 20px;
+                color: #4a90e2;
+            }
+
+            .subtitle {
+                font-size: 1.1rem;
+                color: #a0a0a0;
+                margin-bottom: 40px;
+                line-height: 1.6;
+            }
+
+            .tools-list {
+                list-style: none;
+            }
+
+            .tool-item {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(10px);
+                border-radius: 12px;
+                padding: 24px;
+                margin-bottom: 16px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                transition: all 0.3s ease;
+            }
+
+            .tool-item:hover {
+                background: rgba(255, 255, 255, 0.08);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+            }
+
+            .tool-item h2 {
+                font-size: 1.5rem;
+                font-weight: 400;
+                margin-bottom: 8px;
+            }
+
+            .tool-item h2 a {
+                color: #4a90e2;
+                text-decoration: none;
+                transition: color 0.3s ease;
+            }
+
+            .tool-item h2 a:hover {
+                color: #6ab0ff;
+            }
+
+            .tool-item p {
+                color: #b0b0b0;
+                line-height: 1.6;
+            }
+
+            .footer {
+                margin-top: 60px;
+                padding-top: 30px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                color: #808080;
+                font-size: 0.9rem;
+            }
+
+            .footer a {
+                color: #4a90e2;
+                text-decoration: none;
+            }
+
+            .footer a:hover {
+                text-decoration: underline;
+            }
+
+            @media (max-width: 600px) {
+                h1 {
+                    font-size: 2rem;
+                }
+
+                .tool-item {
+                    padding: 20px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>HTML Tools</h1>
+            <p class="subtitle">
+                A collection of single-page HTML utilities. Each tool combines
+                HTML, JavaScript, and CSS in a single file to provide useful
+                functionality. Inspired by
+                <a
+                    href="https://tools.simonwillison.net/"
+                    style="color: #4a90e2; text-decoration: none"
+                    >Simon Willison's tools collection</a
+                >.
+            </p>
+
+            <ul class="tools-list">
+                <li class="tool-item">
+                    <h2><a href="countdown-timer.html">Countdown Timer</a></h2>
+                    <p>
+                        A clean, elegant countdown timer with preset buttons (1,
+                        3, 5 minutes), custom time input, circular progress
+                        visualization, and optional sound notification. Features
+                        dark mode design and visual alert when time expires.
+                    </p>
+                </li>
+
+                <!-- Add more tools here as you create them:
+            <li class="tool-item">
+                <h2><a href="your-tool.html">Tool Name</a></h2>
+                <p>Brief description of what the tool does.</p>
+            </li>
+            --></ul>
+
+            <div class="footer">
+                <p>
+                    Vibe coded by
+                    <a href="https://github.com/bjrnwnklr">bjrnwnklr</a> • View
+                    source on
+                    <a href="https://github.com/bjrnwnklr/html-tools">GitHub</a>
+                    • Licensed under <a href="LICENSE">Apache 2.0</a>
+                </p>
+            </div>
+        </div>
+    </body>
+</html>
