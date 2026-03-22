@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Lens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:          #0d0f14;
+      --surface:     #13161e;
+      --surface2:    #1b1f2b;
+      --border:      #252a38;
+      --border-hi:   #3a4055;
+
+      --text:        #c9d1e8;
+      --text-dim:    #5c6480;
+      --text-bright: #e8ecf8;
+
+      /* token colours */
+      --key:         #7ec8e3;   /* steel blue  */
+      --str:         #a8d8a8;   /* sage green  */
+      --num:         #f0c080;   /* warm amber  */
+      --bool-true:   #80d8b0;   /* mint        */
+      --bool-false:  #e88a8a;   /* soft coral  */
+      --null:        #b080e8;   /* lavender    */
+      --brace:       #555e7a;   /* muted slate */
+      --colon:       #404866;
+
+      --accent:      #4a9eed;
+      --accent-dim:  #1d3d62;
+
+      --radius:      6px;
+      --mono:        'JetBrains Mono', monospace;
+      --sans:        'Syne', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+
+    /* ─── layout ─────────────────────────────────────────────── */
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 100vh;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 28px 0 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -1px;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-family: var(--sans);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-bright);
+      letter-spacing: 0.5px;
+    }
+
+    header p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 1px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .btn {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-hi);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover {
+      background: var(--border-hi);
+      color: var(--text-bright);
+    }
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .btn.primary:hover {
+      background: #5baff5;
+      border-color: #5baff5;
+    }
+    .btn.danger {
+      border-color: #3d2020;
+      color: #e88a8a;
+    }
+    .btn.danger:hover {
+      background: #3d2020;
+      color: #ffaaaa;
+    }
+
+    /* ─── main pane ───────────────────────────────────────────── */
+    .panes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px 0;
+      min-height: 0;
+    }
+
+    @media (max-width: 780px) {
+      .panes { grid-template-columns: 1fr; }
+    }
+
+    .pane {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .pane-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+
+    .pane-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+    }
+
+    .pane-actions { display: flex; gap: 8px; }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-dim);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .icon-btn:hover { color: var(--text); background: var(--border); }
+
+    textarea {
+      flex: 1;
+      resize: none;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13.5px;
+      line-height: 1.7;
+      padding: 16px;
+      tab-size: 2;
+      min-height: 400px;
+    }
+    textarea::placeholder { color: var(--text-dim); }
+    textarea:focus { box-shadow: inset 0 0 0 2px var(--accent-dim); }
+
+    /* ─── output ─────────────────────────────────────────────── */
+    #output-wrap {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 13.5px;
+      line-height: 1.7;
+      min-height: 400px;
+    }
+
+    /* error state */
+    .error-msg {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #2a1212;
+      border: 1px solid #5a2020;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      color: #e88a8a;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+    .error-msg .err-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* placeholder */
+    .placeholder {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-family: var(--mono);
+      text-align: center;
+    }
+    .placeholder .ph-icon { font-size: 32px; opacity: 0.3; }
+
+    /* ─── token colours ──────────────────────────────────────── */
+    .jk  { color: var(--key); }
+    .js  { color: var(--str); }
+    .jn  { color: var(--num); }
+    .jbt { color: var(--bool-true); font-weight: 600; }
+    .jbf { color: var(--bool-false); font-weight: 600; }
+    .jnl { color: var(--null); font-style: italic; }
+    .jb  { color: var(--brace); }   /* braces / brackets */
+    .jc  { color: var(--colon); }   /* colon / comma */
+
+    /* collapsible nodes */
+    .jnode { display: block; }
+
+    .toggle {
+      cursor: pointer;
+      user-select: none;
+      display: inline-block;
+      width: 14px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 10px;
+      vertical-align: middle;
+      transition: transform 0.15s;
+    }
+    .toggle:hover { color: var(--accent); }
+    .toggle.closed { transform: rotate(-90deg); }
+
+    .collapsible-body { display: block; }
+    .collapsible-body.hidden { display: none; }
+    .ellipsis { color: var(--text-dim); display: none; }
+    .ellipsis.visible { display: inline; }
+
+    /* indent lines */
+    .indent {
+      display: inline-block;
+      border-left: 1px solid var(--border);
+      margin-left: 7px;
+      padding-left: 14px;
+    }
+
+    /* ─── footer ─────────────────────────────────────────────── */
+    footer {
+      padding: 14px 0;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: var(--mono);
+    }
+    #stats { }
+    .legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+    }
+    .legend .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #505878; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo-mark">{}</div>
+    <div>
+      <h1>JSON Lens</h1>
+      <p>Pretty-print &amp; explore JSON with syntax highlighting</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="btn-sample">Load sample</button>
+      <button class="btn" id="btn-sort">⇅ Sort keys</button>
+      <button class="btn danger" id="btn-clear">Clear</button>
+      <button class="btn primary" id="btn-format">Format ↵</button>
+    </div>
+  </header>
+
+  <div class="panes">
+
+    <!-- INPUT -->
+    <div class="pane">
+      <div class="pane-header">
+        <span class="pane-title">Input</span>
+        <div class="pane-actions">
+          <button class="icon-btn" id="btn-paste" title="Paste from clipboard">⎘ Paste</button>
+        </div>
+      </div>
+      <textarea id="input" spellcheck="false" placeholder='Paste your JSON here…
+
+{"name": "Alice", "age": 30}'></textarea>
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="pane">
+      <div class="pane-header">
+        <span class="pane-title">Output</span>
+        <div class="pane-actions">
+          <button class="icon-btn" id="btn-expand-all">Expand all</button>
+          <button class="icon-btn" id="btn-collapse-all">Collapse all</button>
+          <button class="icon-btn" id="btn-copy" title="Copy formatted JSON">⎘ Copy</button>
+        </div>
+      </div>
+      <div id="output-wrap">
+        <div class="placeholder">
+          <div class="ph-icon">{ }</div>
+          <div>Formatted output will appear here</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div id="stats"></div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--key)"></span>key</span>
+      <span><span class="dot" style="background:var(--str)"></span>string</span>
+      <span><span class="dot" style="background:var(--num)"></span>number</span>
+      <span><span class="dot" style="background:var(--bool-true)"></span>true</span>
+      <span><span class="dot" style="background:var(--bool-false)"></span>false</span>
+      <span><span class="dot" style="background:var(--null)"></span>null</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  const inputEl   = document.getElementById('input');
+  const outputEl  = document.getElementById('output-wrap');
+  const statsEl   = document.getElementById('stats');
+
+  /* ── state ───────────────────────────────────────────────── */
+  let sortKeys = false;
+
+  /* ── helpers ─────────────────────────────────────────────── */
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  function sortDeep(val) {
+    if (val === null || typeof val !== 'object') return val;
+    if (Array.isArray(val)) return val.map(sortDeep);
+    return Object.keys(val).sort().reduce((acc, k) => {
+      acc[k] = sortDeep(val[k]);
+      return acc;
+    }, {});
+  }
+
+  function countNodes(val) {
+    if (val === null || typeof val !== 'object') return 1;
+    let n = 1;
+    for (const k in val) n += countNodes(val[k]);
+    return n;
+  }
+
+  /* ── renderer ────────────────────────────────────────────── */
+  let _id = 0;
+
+  function renderValue(val, depth) {
+    if (val === null) return `<span class="jnl">null</span>`;
+    if (typeof val === 'boolean') {
+      return val
+        ? `<span class="jbt">true</span>`
+        : `<span class="jbf">false</span>`;
+    }
+    if (typeof val === 'number') return `<span class="jn">${esc(String(val))}</span>`;
+    if (typeof val === 'string') return `<span class="js">"${esc(val)}"</span>`;
+    if (Array.isArray(val))  return renderArray(val, depth);
+    if (typeof val === 'object') return renderObject(val, depth);
+    return esc(String(val));
+  }
+
+  function renderObject(obj, depth) {
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return `<span class="jb">{}</span>`;
+    const id = `n${_id++}`;
+    const inner = keys.map((k, i) => {
+      const comma = i < keys.length - 1 ? `<span class="jc">,</span>` : '';
+      return `<div class="jnode"><span class="jk">"${esc(k)}"</span><span class="jc">: </span>${renderValue(obj[k], depth + 1)}${comma}</div>`;
+    }).join('');
+    const preview = keys.length > 3
+      ? `{${keys.slice(0,3).map(k=>`"${esc(k)}": …`).join(', ')}, …}`
+      : `{${keys.map(k=>`"${esc(k)}": …`).join(', ')}}`;
+    return `<span class="jb">{</span><span class="toggle" data-id="${id}" title="Collapse">▾</span><span class="ellipsis" data-id="${id}">${esc(preview)}</span><div class="collapsible-body indent" id="${id}">${inner}</div><span class="jb">}</span>`;
+  }
+
+  function renderArray(arr, depth) {
+    if (arr.length === 0) return `<span class="jb">[]</span>`;
+    const id = `n${_id++}`;
+    const inner = arr.map((v, i) => {
+      const comma = i < arr.length - 1 ? `<span class="jc">,</span>` : '';
+      return `<div class="jnode">${renderValue(v, depth + 1)}${comma}</div>`;
+    }).join('');
+    return `<span class="jb">[</span><span class="toggle" data-id="${id}" title="Collapse">▾</span><span class="ellipsis" data-id="${id}">[${arr.length} items]</span><div class="collapsible-body indent" id="${id}">${inner}</div><span class="jb">]</span>`;
+  }
+
+  /* ── format ──────────────────────────────────────────────── */
+  function format() {
+    const raw = inputEl.value.trim();
+    if (!raw) {
+      outputEl.innerHTML = `<div class="placeholder"><div class="ph-icon">{ }</div><div>Formatted output will appear here</div></div>`;
+      statsEl.textContent = '';
+      return;
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      // Try to highlight the error position
+      const msg = e.message || String(e);
+      outputEl.innerHTML = `<div class="error-msg"><span class="err-icon">✕</span><div><strong>Invalid JSON</strong><br>${esc(msg)}</div></div>`;
+      statsEl.textContent = '';
+      return;
+    }
+    _id = 0;
+    const display = sortKeys ? sortDeep(parsed) : parsed;
+    outputEl.innerHTML = `<div class="jnode">${renderValue(display, 0)}</div>`;
+    const nodes = countNodes(parsed);
+    const bytes = new Blob([JSON.stringify(parsed)]).size;
+    statsEl.textContent = `${nodes.toLocaleString()} nodes · ${bytes.toLocaleString()} bytes${sortKeys ? ' · sorted' : ''}`;
+  }
+
+  /* ── collapse / expand ───────────────────────────────────── */
+  outputEl.addEventListener('click', e => {
+    const toggle = e.target.closest('.toggle');
+    if (!toggle) return;
+    const id = toggle.dataset.id;
+    const body = document.getElementById(id);
+    const ellipsis = outputEl.querySelector(`.ellipsis[data-id="${id}"]`);
+    const collapsed = body.classList.toggle('hidden');
+    ellipsis.classList.toggle('visible', collapsed);
+    toggle.classList.toggle('closed', collapsed);
+    toggle.title = collapsed ? 'Expand' : 'Collapse';
+  });
+
+  function setAllCollapsed(state) {
+    outputEl.querySelectorAll('.collapsible-body').forEach(el => {
+      const id = el.id;
+      const toggle   = outputEl.querySelector(`.toggle[data-id="${id}"]`);
+      const ellipsis = outputEl.querySelector(`.ellipsis[data-id="${id}"]`);
+      el.classList.toggle('hidden', state);
+      if (ellipsis) ellipsis.classList.toggle('visible', state);
+      if (toggle)   toggle.classList.toggle('closed', state);
+    });
+  }
+
+  document.getElementById('btn-collapse-all').addEventListener('click', () => setAllCollapsed(true));
+  document.getElementById('btn-expand-all').addEventListener('click',   () => setAllCollapsed(false));
+
+  /* ── buttons ─────────────────────────────────────────────── */
+  document.getElementById('btn-format').addEventListener('click', format);
+
+  inputEl.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') format();
+  });
+
+  // Live formatting as user types (debounced)
+  let _timer;
+  inputEl.addEventListener('input', () => {
+    clearTimeout(_timer);
+    _timer = setTimeout(format, 350);
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    inputEl.value = '';
+    outputEl.innerHTML = `<div class="placeholder"><div class="ph-icon">{ }</div><div>Formatted output will appear here</div></div>`;
+    statsEl.textContent = '';
+    inputEl.focus();
+  });
+
+  document.getElementById('btn-sort').addEventListener('click', () => {
+    sortKeys = !sortKeys;
+    const btn = document.getElementById('btn-sort');
+    btn.classList.toggle('active', sortKeys);
+    btn.textContent = sortKeys ? '⇅ Sorted ✓' : '⇅ Sort keys';
+    format();
+  });
+
+  document.getElementById('btn-copy').addEventListener('click', () => {
+    const raw = inputEl.value.trim();
+    if (!raw) return;
+    try {
+      let parsed = JSON.parse(raw);
+      if (sortKeys) parsed = sortDeep(parsed);
+      const formatted = JSON.stringify(parsed, null, 2);
+      navigator.clipboard.writeText(formatted).then(() => {
+        const btn = document.getElementById('btn-copy');
+        btn.textContent = '✓ Copied';
+        setTimeout(() => btn.textContent = '⎘ Copy', 1800);
+      });
+    } catch {}
+  });
+
+  document.getElementById('btn-paste').addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      inputEl.value = text;
+      format();
+    } catch { inputEl.focus(); }
+  });
+
+  document.getElementById('btn-sample').addEventListener('click', () => {
+    inputEl.value = JSON.stringify({
+      "name": "JSON Lens",
+      "version": "1.0.0",
+      "active": true,
+      "score": 98.6,
+      "tags": ["json", "formatter", "dark-mode"],
+      "author": {
+        "name": "Developer",
+        "contact": null,
+        "roles": ["admin", "editor"]
+      },
+      "config": {
+        "indent": 2,
+        "sortKeys": false,
+        "collapseDepth": 3,
+        "theme": {
+          "primary": "#4a9eed",
+          "background": "#0d0f14"
+        }
+      }
+    });
+    format();
+  });
+</script>
+</body>
+</html>
