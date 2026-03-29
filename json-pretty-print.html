@@ -217,6 +217,23 @@
       min-height: 400px;
     }
 
+    /* warning state (auto-corrected) */
+    .warn-msg {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #241e0a;
+      border: 1px solid #5a4a10;
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      color: #f0c080;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .warn-msg .warn-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
     /* error state */
     .error-msg {
       display: flex;
@@ -464,6 +481,48 @@
     return `<span class="jb">[</span><span class="toggle" data-id="${id}" title="Collapse">▾</span><span class="ellipsis" data-id="${id}">[${arr.length} items]</span><div class="collapsible-body indent" id="${id}">${inner}</div><span class="jb">]</span>`;
   }
 
+  /* ── auto-fix helpers ────────────────────────────────────── */
+  function fixJson(raw) {
+    const fixes = [];
+    let fixed = raw;
+
+    // 1. Trailing commas before } or ]
+    const noTrailing = fixed.replace(/,(\s*[}\]])/g, '$1');
+    if (noTrailing !== fixed) {
+      fixes.push('trailing commas removed');
+      fixed = noTrailing;
+    }
+
+    // 2. Single-quoted strings → double-quoted
+    const dequoted = fixed.replace(/'(?:[^'\\]|\\.)*'/g, m => {
+      const inner = m.slice(1, -1)
+        .replace(/\\'/g, "'")   // unescape \'
+        .replace(/"/g, '\\"');  // escape any " inside
+      return `"${inner}"`;
+    });
+    if (dequoted !== fixed) {
+      fixes.push('single quotes converted to double quotes');
+      fixed = dequoted;
+    }
+
+    // 3. Unquoted object keys
+    const quotedKeys = fixed.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)(\s*:)/g, '$1"$2"$3');
+    if (quotedKeys !== fixed) {
+      fixes.push('unquoted keys quoted');
+      fixed = quotedKeys;
+    }
+
+    return { fixed, fixes };
+  }
+
+  function getErrorLocation(raw, e) {
+    const m = (e.message || '').match(/position (\d+)/i);
+    if (!m) return null;
+    const pos = parseInt(m[1]);
+    const lines = raw.slice(0, pos).split('\n');
+    return { line: lines.length, col: lines[lines.length - 1].length + 1 };
+  }
+
   /* ── format ──────────────────────────────────────────────── */
   function format() {
     const raw = inputEl.value.trim();
@@ -472,19 +531,34 @@
       statsEl.textContent = '';
       return;
     }
+
     let parsed;
+    let warnHtml = '';
+
     try {
       parsed = JSON.parse(raw);
     } catch (e) {
-      // Try to highlight the error position
-      const msg = e.message || String(e);
-      outputEl.innerHTML = `<div class="error-msg"><span class="err-icon">✕</span><div><strong>Invalid JSON</strong><br>${esc(msg)}</div></div>`;
-      statsEl.textContent = '';
-      return;
+      // Try auto-fix
+      const { fixed, fixes } = fixJson(raw);
+      if (fixes.length) {
+        try {
+          parsed = JSON.parse(fixed);
+          warnHtml = `<div class="warn-msg"><span class="warn-icon">⚠</span><div>Auto-corrected: ${fixes.join(', ')}</div></div>`;
+        } catch {}
+      }
+
+      if (parsed === undefined) {
+        const loc = getErrorLocation(raw, e);
+        const locStr = loc ? ` at line ${loc.line}, col ${loc.col}` : '';
+        outputEl.innerHTML = `<div class="error-msg"><span class="err-icon">✕</span><div><strong>Invalid JSON${locStr}</strong><br>${esc(e.message || String(e))}</div></div>`;
+        statsEl.textContent = '';
+        return;
+      }
     }
+
     _id = 0;
     const display = sortKeys ? sortDeep(parsed) : parsed;
-    outputEl.innerHTML = `<div class="jnode">${renderValue(display, 0)}</div>`;
+    outputEl.innerHTML = warnHtml + `<div class="jnode">${renderValue(display, 0)}</div>`;
     const nodes = countNodes(parsed);
     const bytes = new Blob([JSON.stringify(parsed)]).size;
     statsEl.textContent = `${nodes.toLocaleString()} nodes · ${bytes.toLocaleString()} bytes${sortKeys ? ' · sorted' : ''}`;
