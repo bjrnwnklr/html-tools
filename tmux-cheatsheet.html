@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tmux Cheatsheet</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@300;400;600&display=swap');
+
+  :root {
+    --bg: #0e1117;
+    --surface: #161b27;
+    --surface2: #1e2535;
+    --border: #2a3347;
+    --accent: #4ade80;
+    --accent2: #38bdf8;
+    --accent3: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --kbd-bg: #1e2535;
+    --kbd-border: #3b4f6a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 32px 24px;
+    min-height: 100vh;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .header h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -1px;
+  }
+
+  .header h1 span { color: var(--muted); }
+
+  .header p {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .prefix-note {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent3);
+    border-radius: 6px;
+    padding: 10px 18px;
+    margin: 0 auto 36px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--muted);
+    display: block;
+    max-width: 480px;
+    text-align: center;
+  }
+
+  .prefix-note strong { color: var(--accent3); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .card-icon {
+    font-size: 1rem;
+  }
+
+  .card-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent2);
+  }
+
+  .card-body {
+    padding: 4px 0;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 18px;
+    gap: 16px;
+    border-bottom: 1px solid rgba(42, 51, 71, 0.5);
+    transition: background 0.12s;
+  }
+
+  .row:last-child { border-bottom: none; }
+  .row:hover { background: rgba(255,255,255,0.03); }
+
+  .desc {
+    color: var(--text);
+    font-size: 0.84rem;
+    flex: 1;
+  }
+
+  .keys {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  kbd {
+    display: inline-block;
+    background: var(--kbd-bg);
+    border: 1px solid var(--kbd-border);
+    border-bottom: 2px solid var(--kbd-border);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  kbd.plain { color: var(--text); }
+  kbd.cmd { color: var(--accent2); border-color: #1e3a4f; background: #0f2233; }
+
+  .sep {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .tag {
+    font-size: 0.68rem;
+    background: rgba(74, 222, 128, 0.1);
+    color: var(--accent);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: 6px;
+    flex-shrink: 0;
+  }
+
+  .tag.blue {
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--accent2);
+    border-color: rgba(56, 189, 248, 0.2);
+  }
+
+  .bash-row {
+    padding: 10px 18px;
+    border-bottom: 1px solid rgba(42, 51, 71, 0.5);
+  }
+  .bash-row:last-child { border-bottom: none; }
+  .bash-row:hover { background: rgba(255,255,255,0.03); }
+
+  .bash-desc {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .bash-cmd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--accent2);
+  }
+
+  .bash-cmd .dollar { color: var(--muted); margin-right: 6px; }
+
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>tmux <span>//</span> cheatsheet</h1>
+  <p>for SSH sessions on Pi &amp; Jellyfin server</p>
+</div>
+
+<div class="prefix-note">
+  <strong>Prefix key: Ctrl + b</strong> — press it, release, then press the command key.<br>
+  All shortcuts below assume the default prefix.
+</div>
+
+<div class="grid">
+
+  <!-- Sessions -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">📦</span>
+      <span class="card-title">Sessions</span>
+    </div>
+    <div class="card-body">
+      <div class="bash-row">
+        <div class="bash-desc">New named session</div>
+        <div class="bash-cmd"><span class="dollar">$</span>tmux new -s mysession</div>
+      </div>
+      <div class="bash-row">
+        <div class="bash-desc">Attach to last session</div>
+        <div class="bash-cmd"><span class="dollar">$</span>tmux attach</div>
+      </div>
+      <div class="bash-row">
+        <div class="bash-desc">Attach to named session</div>
+        <div class="bash-cmd"><span class="dollar">$</span>tmux attach -t mysession</div>
+      </div>
+      <div class="bash-row">
+        <div class="bash-desc">List sessions</div>
+        <div class="bash-cmd"><span class="dollar">$</span>tmux ls</div>
+      </div>
+      <div class="bash-row">
+        <div class="bash-desc">Kill a session</div>
+        <div class="bash-cmd"><span class="dollar">$</span>tmux kill-session -t mysession</div>
+      </div>
+      <div class="bash-row">
+        <div class="bash-desc">Attach or create (alias trick)</div>
+        <div class="bash-cmd"><span class="dollar">$</span>tmux attach || tmux new</div>
+      </div>
+      <div class="row">
+        <span class="desc">Detach from session</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>d</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Rename current session</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>$</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Switch to session by name</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>s</kbd></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Windows -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">🪟</span>
+      <span class="card-title">Windows (tabs)</span>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <span class="desc">New window</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>c</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Next window</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>n</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Previous window</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>p</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Go to window by number</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>0–9</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Rename current window</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>,</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">List windows</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>w</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Close current window</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>&amp;</kbd></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panes -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">⬛</span>
+      <span class="card-title">Panes (splits)</span>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <span class="desc">Split horizontally (top/bottom)</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>"</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Split vertically (left/right)</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>%</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Navigate panes</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>↑↓←→</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Cycle through panes</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>o</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Close current pane</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>x</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Zoom pane (toggle fullscreen)</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>z</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Resize pane</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>Ctrl+↑↓←→</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Show pane numbers</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>q</kbd></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Copy mode -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">📋</span>
+      <span class="card-title">Copy Mode (scrollback)</span>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <span class="desc">Enter copy mode (scroll up)</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>[</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Exit copy mode</span>
+        <div class="keys"><kbd class="plain">q</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Scroll up / down</span>
+        <div class="keys"><kbd class="plain">↑↓</kbd><span class="sep">or</span><kbd class="plain">PgUp/Dn</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Start selection</span>
+        <div class="keys"><kbd class="plain">Space</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Copy selection</span>
+        <div class="keys"><kbd class="plain">Enter</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Paste buffer</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>]</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Search backward</span>
+        <div class="keys"><kbd class="plain">?</kbd><span class="sep">then</span><kbd class="plain">Enter</kbd></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Misc -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">⚙️</span>
+      <span class="card-title">Misc &amp; Useful</span>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <span class="desc">Show key bindings</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>?</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Command prompt</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>:</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Reload config</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>:</kbd><span class="sep">→</span><kbd class="plain">source ~/.tmux.conf</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Show time</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>t</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Move pane to new window</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>!</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Swap pane with previous</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>{</kbd></div>
+      </div>
+      <div class="row">
+        <span class="desc">Swap pane with next</span>
+        <div class="keys"><kbd>prefix</kbd><span class="sep">+</span><kbd>}</kbd></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SSH workflow -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">🔌</span>
+      <span class="card-title">Your SSH Workflow</span>
+    </div>
+    <div class="card-body">
+      <div class="bash-row">
+        <div class="bash-desc">SSH + attach or create session in one command</div>
+        <div class="bash-cmd"><span class="dollar">$</span>ssh pi@192.168.x.x -t "tmux attach || tmux new"</div>
+      </div>
+      <div class="bash-row">
+        <div class="bash-desc">Put in ~/.zshrc as alias</div>
+        <div class="bash-cmd"><span class="dollar">$</span>alias sshpi='ssh pi@x.x -t "tmux attach || tmux new"'</div>
+      </div>
+      <div class="bash-row">
+        <div class="bash-desc">Run update, safe to close laptop</div>
+        <div class="bash-cmd"><span class="dollar">$</span>sudo apt upgrade  <span style="color:#4ade80"># inside tmux</span></div>
+      </div>
+      <div class="bash-row">
+        <div class="bash-desc">Detach and close laptop safely</div>
+        <div class="bash-cmd"><span style="color:#64748b">prefix + d, then close lid</span></div>
+      </div>
+      <div class="bash-row">
+        <div class="bash-desc">Come back later, reattach</div>
+        <div class="bash-cmd"><span class="dollar">$</span>tmux attach</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  prefix = Ctrl + b &nbsp;·&nbsp; default config &nbsp;·&nbsp; tmux cheatsheet
+</footer>
+
+</body>
+</html>
